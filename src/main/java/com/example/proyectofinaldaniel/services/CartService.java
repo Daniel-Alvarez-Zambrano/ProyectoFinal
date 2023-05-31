@@ -7,7 +7,6 @@ import com.example.proyectofinaldaniel.repositories.CartRepository;
 import com.example.proyectofinaldaniel.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 @AllArgsConstructor

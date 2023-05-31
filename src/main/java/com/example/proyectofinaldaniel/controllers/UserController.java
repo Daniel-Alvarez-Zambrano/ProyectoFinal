@@ -1,12 +1,17 @@
 package com.example.proyectofinaldaniel.controllers;
 
 import com.example.proyectofinaldaniel.entities.Cart;
+import com.example.proyectofinaldaniel.entities.ErrorResponse;
 import com.example.proyectofinaldaniel.entities.Role;
 import com.example.proyectofinaldaniel.entities.dto.AuthRequest;
 import com.example.proyectofinaldaniel.entities.UserEntity;
 import com.example.proyectofinaldaniel.repositories.CartRepository;
 import com.example.proyectofinaldaniel.repositories.UserRepository;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,14 +36,23 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public UserEntity login(@RequestBody AuthRequest user){
+    public ResponseEntity login(@RequestBody AuthRequest user){
         Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(),user.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return repository.findByEmail(user.getEmail()).orElseThrow(() ->new UsernameNotFoundException("No se ha encontrado el usuario con email"+user.getEmail()));
+        return ResponseEntity.ok(repository.findByEmail(user.getEmail()).orElseThrow(() ->new UsernameNotFoundException("No se ha encontrado el usuario con email"+user.getEmail())));
     }
 
     @PostMapping("/register")
-    public UserEntity register(@RequestBody AuthRequest request){
+    public ResponseEntity register(@RequestBody AuthRequest request, HttpServletRequest httpRequest) throws ServletException {
+        if(repository.existsByEmail(request.getEmail())) {
+            return new ResponseEntity(new ErrorResponse("EMAIL_ALREADY_EXISTS", "Enter another email"), HttpStatus.BAD_REQUEST);
+        }
+        if(!request.getEmail().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+            return new ResponseEntity(new ErrorResponse("WRONG_EMAIL_FORMAT", "Enter a valid email"), HttpStatus.BAD_REQUEST);
+        }
+        if(request.getPassword().length() < 6) {
+            return new ResponseEntity(new ErrorResponse("WEAK_PASSWORD", "Enter a valid password"), HttpStatus.BAD_REQUEST);
+        }
         UserEntity user = new UserEntity();
         user.setEmail(request.getEmail());
         user.setPassword(encoderPass.encode(request.getPassword()));
@@ -47,6 +61,6 @@ public class UserController {
         user.setCart(cart);
         user.setRole(List.of(Role.USER));
         repository.save(user);
-        return user;
+        return ResponseEntity.ok(user);
     }
 }

@@ -4,6 +4,7 @@ import com.example.proyectofinaldaniel.entities.Cart;
 import com.example.proyectofinaldaniel.entities.UserEntity;
 import com.example.proyectofinaldaniel.entities.dto.UpdateCart;
 import com.example.proyectofinaldaniel.services.CartService;
+import com.example.proyectofinaldaniel.services.EmailService;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
 @RequestMapping("/cart")
@@ -23,6 +25,8 @@ import java.nio.charset.StandardCharsets;
 public class CartController {
     private CartService service;
     private JavaMailSender emailSender;
+
+    private EmailService emailService;
 
     @GetMapping("/products")
     public Cart getCart() {
@@ -35,17 +39,17 @@ public class CartController {
     }
 
     @GetMapping("/checkout")
-    public String sendCheckout() throws Exception {
+    public Cart sendCheckout() throws Exception {
         MimeMessage message = emailSender.createMimeMessage();
 
         message.setFrom("furnituredaniel@spring.com");
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("albertoaretino3@gmail.com"));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("danielsotea@gmail.com"));
         message.setSubject("Correo spring");
-        String htmlTemplate = new ClassPathResource("correo.html", this.getClass().getClassLoader()).getContentAsString(StandardCharsets.UTF_8);
-        message.setContent(htmlTemplate, "text/html; charset=utf-8");
-
+        Cart cart = getUser().getCart();
+        message.setContent(emailService.getEmailBody(service.getCart(cart.getId())), "text/html; charset=utf-8");
         emailSender.send(message);
-        return "";
+        cart.setProducts(List.of());
+        return service.saveCart(cart);
     }
 
     @DeleteMapping("/remove")
