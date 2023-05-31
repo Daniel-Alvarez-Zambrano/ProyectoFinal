@@ -15,14 +15,14 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinTable(name = "cart_products", joinColumns = {@JoinColumn(name = "cart_id")}, inverseJoinColumns = {@JoinColumn(name = "product_id")})
-    private List<Product> products = new ArrayList<>();
+    private List<CartProduct> products = new ArrayList<>();
     private double cartPrice;
     @OneToOne
     @JsonIgnore
     private UserEntity user;
-    public Cart addToCart(Product product){
+    public Cart addToCart(CartProduct product){
         this.products.add(product);
         return this;
     }

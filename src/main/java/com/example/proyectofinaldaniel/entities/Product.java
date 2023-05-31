@@ -28,7 +28,7 @@ public class Product {
     private String color;
     private int stock;
     private String image;
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE},mappedBy = "products")
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
-    private List<Cart> cartList;
+    private List<CartProduct> cartList;
 }
